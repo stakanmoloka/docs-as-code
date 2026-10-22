@@ -1,0 +1,186 @@
+openapi: 3.0.3
+
+info:
+  title: Movie Recommendation API
+  description: API рекомендательной системы фильмов для формирования персональных рекомендаций на основе предпочтений и истории просмотров пользователя.
+  version: 1.0.0
+
+servers:
+  - url: https://example.com/api/v1
+
+paths:
+  /recommendations:
+    post:
+      summary: Сформировать рекомендации фильмов
+      description: Подбирает фильмы на основе предпочтений пользователя по жанрам.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - genres
+              properties:
+                userId:
+                  type: integer
+                  example: 42
+                genres:
+                  type: array
+                  items:
+                    type: string
+                  example:
+                    - фантастика
+                    - приключения
+
+      responses:
+        '200':
+          description: Рекомендации успешно сформированы
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationResponse'
+        '400':
+          description: Некорректные данные запроса
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: INVALID_GENRES
+                  message:
+                    type: string
+                    example: Необходимо указать хотя бы один жанр
+        '503':
+          description: Модель рекомендаций временно недоступна
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: MODEL_UNAVAILABLE
+                  message:
+                    type: string
+                    example: Сервис рекомендаций временно недоступен
+
+  /recommendations/{userId}:
+    get:
+      summary: Получить рекомендации пользователя
+      description: Возвращает ранее сформированный список рекомендаций для пользователя.
+
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Идентификатор пользователя
+          schema:
+            type: integer
+          example: 42
+
+      responses:
+        '200':
+          description: Рекомендации найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationResponse'
+
+        '404':
+          description: Рекомендации для пользователя не найдены
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: RECOMMENDATIONS_NOT_FOUND
+                  message:
+                    type: string
+                    example: Рекомендации для указанного пользователя не найдены
+                    
+  /movies/{movieId}:
+    get:
+      summary: Получить информацию о фильме
+      description: Возвращает подробную информацию о фильме из списка рекомендаций.
+
+      parameters:
+        - name: movieId
+          in: path
+          required: true
+          description: Идентификатор фильма
+          schema:
+            type: integer
+          example: 101
+
+      responses:
+        '200':
+          description: Информация о фильме найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 101
+                  title:
+                    type: string
+                    example: Интерстеллар
+                  year:
+                    type: integer
+                    example: 2014
+                  genres:
+                    type: array
+                    items:
+                      type: string
+                    example:
+                      - фантастика
+                      - драма
+
+        '404':
+          description: Фильм не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: MOVIE_NOT_FOUND
+                  message:
+                    type: string
+                    example: Фильм с указанным идентификатором не найден
+
+components:
+  schemas:
+    RecommendationResponse:
+      type: object
+      properties:
+        userId:
+          type: integer
+          example: 42
+        recommendations:
+          type: array
+          items:
+            type: object
+            properties:
+              movieId:
+                type: integer
+                example: 101
+              title:
+                type: string
+                example: Интерстеллар
+              score:
+                type: number
+                format: float
+                example: 0.94
+        modelVersion:
+          type: string
+          example: "1.0"
