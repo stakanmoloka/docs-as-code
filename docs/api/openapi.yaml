@@ -26,9 +26,11 @@ paths:
               properties:
                 userId:
                   type: integer
+                  minimum: 1
                   example: 42
                 genres:
                   type: array
+                  minItems: 1
                   items:
                     type: string
                   example:
@@ -47,27 +49,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  code:
-                    type: string
-                    example: INVALID_GENRES
-                  message:
-                    type: string
-                    example: Необходимо указать хотя бы один жанр
+                $ref: '#/components/schemas/ErrorResponse'
         '503':
           description: Модель рекомендаций временно недоступна
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  code:
-                    type: string
-                    example: MODEL_UNAVAILABLE
-                  message:
-                    type: string
-                    example: Сервис рекомендаций временно недоступен
+                $ref: '#/components/schemas/ErrorResponse'
 
   /recommendations/{userId}:
     get:
@@ -81,7 +69,8 @@ paths:
           description: Идентификатор пользователя
           schema:
             type: integer
-          example: 42
+            minimum: 1
+            example: 42
 
       responses:
         '200':
@@ -96,14 +85,14 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  code:
-                    type: string
-                    example: RECOMMENDATIONS_NOT_FOUND
-                  message:
-                    type: string
-                    example: Рекомендации для указанного пользователя не найдены
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '400':
+          description: Некорректный идентификатор пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
                     
   /movies/{movieId}:
     get:
@@ -117,7 +106,8 @@ paths:
           description: Идентификатор фильма
           schema:
             type: integer
-          example: 101
+            minimum: 1
+            example: 101
 
       responses:
         '200':
@@ -149,19 +139,22 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  code:
-                    type: string
-                    example: MOVIE_NOT_FOUND
-                  message:
-                    type: string
-                    example: Фильм с указанным идентификатором не найден
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '400':
+          description: Некорректный идентификатор фильма
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   schemas:
     RecommendationResponse:
       type: object
+      required:
+        - userId
+        - recommendations
       properties:
         userId:
           type: integer
@@ -180,7 +173,22 @@ components:
               score:
                 type: number
                 format: float
+                minimum: 0
+                maximum: 1
                 example: 0.94
         modelVersion:
           type: string
           example: "1.0"
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: INVALID_REQUEST
+        message:
+          type: string
+          example: Некорректные данные запроса
